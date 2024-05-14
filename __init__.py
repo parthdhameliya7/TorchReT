@@ -1,1 +1,1 @@
-from torchret.model import Model 
+from .model import Model 

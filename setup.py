@@ -7,10 +7,10 @@ with open("requirements.txt") as f:
 
 
 setup(
-    name="torchret, a pytorch trainer which is more focused with academic based methods",
+    name="torchret",
     description="",
     long_description="",
-    version = '0.0.1',
+    version = '0.0.2',
     long_description_content_type="text/markdown",
     author="Parth Dhameliya",
     url="https://github.com/parthdhameliya7",
