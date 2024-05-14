@@ -1,0 +1,22 @@
+from setuptools import setup, find_packages
+import codecs
+import os
+
+with open("requirements.txt") as f:
+    requirements = f.read().splitlines()
+
+
+setup(
+    name="torchret, a pytorch trainer which is more focused with academic based methods",
+    description="",
+    long_description="",
+    long_description_content_type="text/markdown",
+    author="Parth Dhameliya",
+    url="https://github.com/parthdhameliya7",
+    license="MIT License",
+    packages=find_packages(),
+    include_package_data=True,
+    platforms=["linux", "unix"],
+    python_requires=">=3.7",
+    install_requires=requirements,
+)
