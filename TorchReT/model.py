@@ -332,7 +332,7 @@ class Model(nn.Module):
         self.optimizer = self.fetch_optimizer()
         self.scheduler = self.fetch_scheduler()
         self.current_epoch += 1
-        self.best_loss = np.Inf
+        self.best_loss = 1000
         self.best_score = 0.0
 
 
@@ -347,12 +347,13 @@ class Model(nn.Module):
                     if self.valid_loss < self.best_loss:
                         self.save(f'{self.metric_path}_{self.model_path}', self.weights_only)
                         print(f'Model was saved based {self.save_best_model} with {self.valid_loss} loss')
+                        self.best_loss = self.valid_loss
                 elif self.save_best_model == 'on_eval_metric':
                     if self.save_on_metric in self.train_metrics:
                         if self.valid_metrics[self.save_on_metric] > self.best_score:
                             self.save(f'{self.metric_path}_{self.model_path}', self.weights_only)
                             print(f'Model was saved based {self.save_best_model} with {self.valid_metrics[self.save_on_metric]} {self.save_on_metric}')
-                
+                            self.best_score = self.valid_metrics[self.save_on_metric]
             if self.save_model_at_every_epoch is not None:
                 self.save(self.model_path, self.weights_only)
 

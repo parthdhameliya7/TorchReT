@@ -10,7 +10,7 @@ setup(
     name="torchret",
     description="",
     long_description="",
-    version = '0.0.3',
+    version = '0.0.4',
     long_description_content_type="text/markdown",
     author="Parth Dhameliya",
     url="https://github.com/parthdhameliya7",
