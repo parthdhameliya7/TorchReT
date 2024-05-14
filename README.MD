@@ -18,8 +18,33 @@ TorchRet is a flexible and customizable PyTorch trainer designed to facilitate a
 
 - **Model Checkpointing**: Save and load model checkpoints with support for saving model weights, optimizer states, scheduler states, and more.
 
-## Installation
+## Example
 
-<img src="images/carbon-3.png" alt="TorchRet Logo" style="max-width: 600px; height: auto;">
+# Setup Configuration
 
-# TorchReT
+<img src="images/configs.png" alt="TorchRet Logo" style="max-width: 600px; height: auto;">
+
+# Create Dataset
+
+<img src="images/dataset.png" alt="TorchRet Logo" style="max-width: 600px; height: auto;">
+
+# Create train valid split
+
+<img src="images/data-construct.png" alt="TorchRet Logo" style="max-width: 600px; height: auto;">
+
+# Create model class and run the model
+
+<img src="images/train_model.png" alt="TorchRet Logo" style="max-width: 600px; height: auto;">
+
+# Output logs
+
+100%|████████████████████████████| 525/525 [04:31<00:00,  1.93it/s, accuracy=0.553, current_lr=0.0001, epoch=1, loss=1.400170, stage=train]
+
+100%|████████████████████████████████████████████████| 132/132 [00:48<00:00,  2.72it/s, accuracy=0.797, epoch=1, loss=0.726667, stage=eval]
+
+Model Saved at models/digit-recognizer.pt
+Model was saved based on_eval_metric with 0.7972301136363636 accuracy
+
+100%|███████████████████████████| 525/525 [04:50<00:00,  1.81it/s, accuracy=0.843, current_lr=9.76e-5, epoch=2, loss=0.561076, stage=train]
+
+100%|████████████████████████████████████████████████| 132/132 [00:52<00:00,  2.50it/s, accuracy=0.892, epoch=2, loss=0.387058, stage=eval]
