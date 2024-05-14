@@ -183,7 +183,7 @@ class Model(nn.Module):
             for m_m in metrics_meter:
                 metrics_meter[m_m].update(metrics[m_m].item(), dataloader.batch_size)
                 monitor[m_m] = metrics_meter[m_m].avg
-            tracker.set_postfix(epoch = self.current_epoch, loss='%.6f' %float(losses.avg), stage="train", **monitor)
+            tracker.set_postfix(epoch = self.current_epoch, loss='%.6f' %float(losses.avg), stage="train", current_lr = self.optimizer.param_groups[0]['lr'], **monitor)
             self.current_train_step += 1
 
         if self.swa_training is not None:
@@ -338,16 +338,16 @@ class Model(nn.Module):
             if self.save_best_model is not None:
                 if self.save_best_model == 'on_eval_loss':
                     if self.valid_loss < self.best_loss:
-                        self.save(f'{self.metric_path}_{self.model_path}', self.weights_only)
+                        self.save(f'{self.model_path}_{self.metric_path}', self.weights_only)
                         print(f'Model was saved based {self.save_best_model} with {self.valid_loss} loss')
                         self.best_loss = self.valid_loss
                 elif self.save_best_model == 'on_eval_metric':
                     if self.save_on_metric in self.train_metrics:
                         if self.valid_metrics[self.save_on_metric] > self.best_score:
-                            self.save(f'{self.metric_path}_{self.model_path}', self.weights_only)
+                            self.save(f'{self.model_path}_{self.metric_path}', self.weights_only)
                             print(f'Model was saved based {self.save_best_model} with {self.valid_metrics[self.save_on_metric]} {self.save_on_metric}')
                             self.best_score = self.valid_metrics[self.save_on_metric]
-            if self.save_model_at_every_epoch is not None:
+            if self.save_model_at_every_epoch is True:
                 self.save(self.model_path, self.weights_only)
 
 
