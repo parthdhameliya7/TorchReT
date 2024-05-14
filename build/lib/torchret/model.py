@@ -38,6 +38,7 @@ class Model(nn.Module):
             weights_only (bool or None): Whether to save only the model weights.
             save_best_model (str or None) : Whether to save model based on (on_eval_loss or on_eval_metric)
             save_on_metric (str or None) : Model saving on which metric
+            metric_path (str or None) : additional metric path to differ from original model path
         """
         super().__init__(*args, **kwargs)
 
@@ -65,6 +66,7 @@ class Model(nn.Module):
         self.save_on_metric = None
         self.model_path = None
         self.weights_only = None
+        self.metric_path = None
 
     def forward(self, *args, **kwargs):
         """
@@ -336,14 +338,13 @@ class Model(nn.Module):
             if self.save_best_model is not None:
                 if self.save_best_model == 'on_eval_loss':
                     if self.valid_loss < self.best_loss:
-                        if self.model_path is not None:
-                            self.save(f'{self.model_path}', self.weights_only)
+                        self.save(f'{self.model_path}_{self.metric_path}', self.weights_only)
                         print(f'Model was saved based {self.save_best_model} with {self.valid_loss} loss')
                         self.best_loss = self.valid_loss
                 elif self.save_best_model == 'on_eval_metric':
                     if self.save_on_metric in self.train_metrics:
                         if self.valid_metrics[self.save_on_metric] > self.best_score:
-                            self.save(f'{self.model_path}', self.weights_only)
+                            self.save(f'{self.model_path}_{self.metric_path}', self.weights_only)
                             print(f'Model was saved based {self.save_best_model} with {self.valid_metrics[self.save_on_metric]} {self.save_on_metric}')
                             self.best_score = self.valid_metrics[self.save_on_metric]
             if self.save_model_at_every_epoch is True:
