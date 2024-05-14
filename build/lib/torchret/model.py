@@ -86,6 +86,12 @@ class Model(nn.Module):
         """
         return 
     
+    def fetch_scheduler(self, *args, **kwargs):
+        """
+        Method to fetch the scheduler for adjusting learning rate during training.
+        """
+        return 
+    
     def get_mixup(self, *args, **kwargs):
         """
         Method to apply mixup augmentation to the data.
@@ -323,7 +329,8 @@ class Model(nn.Module):
         if self.fp16:
             self.scaler = torch.cuda.amp.GradScaler()
 
-        self.optimizer, self.scheduler = self.fetch_optimizer()
+        self.optimizer = self.fetch_optimizer()
+        self.scheduler = self.fetch_scheduler()
         self.current_epoch += 1
         self.best_loss = 1000
         self.best_score = 0.0
