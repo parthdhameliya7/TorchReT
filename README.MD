@@ -2,6 +2,12 @@
 
 TorchRet is a flexible and customizable PyTorch trainer designed to facilitate academic research experiments in deep learning. It provides a comprehensive framework for easily implementing and experimenting with various research methodologies, including but not limited to cutmix, mixup, progressive learning, and more.
 
+To install the `torchret` package, you can use the following pip command:
+
+```sh
+!pip install torchret
+```
+
 ## Features
 
 - **Flexible Model Definition**: Define your neural network models with ease using PyTorch's nn.Module class.
@@ -48,3 +54,5 @@ Model was saved based on_eval_metric with 0.7972301136363636 accuracy
 100%|███████████████████████████| 525/525 [04:50<00:00,  1.81it/s, accuracy=0.843, current_lr=9.76e-5, epoch=2, loss=0.561076, stage=train]
 
 100%|████████████████████████████████████████████████| 132/132 [00:52<00:00,  2.50it/s, accuracy=0.892, epoch=2, loss=0.387058, stage=eval]
+
+
