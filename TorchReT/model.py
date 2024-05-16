@@ -135,7 +135,7 @@ class Model(nn.Module):
             data = self.get_cutmix(data)
 
         # Apply train step with fp16 precision training 
-        if self.fp16 is not None:
+        if self.fp16 is True:
             self.optimizer.zero_grad()
             _, loss, metrics = self.model_fn(data)
             self.scaler.scale(loss).backward()
@@ -143,7 +143,7 @@ class Model(nn.Module):
             self.scaler.update()
 
         # Apply train step with Sharpness-Aware Minimization 
-        elif self.sam_training is not None:
+        elif self.sam_training is True:
             _, loss1, metrics = self.model_fn(data)
             loss1.backward()
             self.optimizer.first_step(zero_grad = True)
@@ -158,17 +158,37 @@ class Model(nn.Module):
             loss.backward()
             self.optimizer.step()
 
-        if self.scheduler is not None:
+        if self.scheduler is True:
             if self.step_scheduler_after == 'batch':
                 self.scheduler.step()
                 
         return loss, metrics
     
     def valid_one_step(self, data):
+        """
+        Perform one step of validation.
+
+        Args:
+            data (dict): Dictionary containing input data tensors.
+
+        Returns:
+            loss: Loss tensor.
+            metrics: Dictionary containing additional metrics.
+        """
         _, loss, metrics = self.model_fn(data)
         return loss, metrics
 
     def train_one_epoch(self, dataloader):
+        """
+        Perform one epoch of training.
+
+        Args:
+            dataloader (torch.nn.Module): batches of data.
+
+        Returns:
+            loss: Loss Average.
+            monitor: Dictionary containing additional metrics with averages.
+        """
         self.train()
         losses = AverageMeter()
         tracker = tqdm(dataloader, total = len(dataloader))
@@ -184,21 +204,31 @@ class Model(nn.Module):
             tracker.set_postfix(epoch = self.current_epoch, loss='%.6f' %float(losses.avg), stage="train", current_lr = self.optimizer.param_groups[0]['lr'], **monitor)
             self.current_train_step += 1
 
-        if self.swa_training is not None:
+        if self.swa_training is True:
             if self.current_epoch + 1 >= self.swa_start:
                 self.swa_model.update_parameters(self)
             else:
-                if self.scheduler is not None:
+                if self.scheduler is True:
                     if self.step_scheduler_after == 'epoch':
                         self.scheduler.step()
         else:
-            if self.scheduler is not None:
+            if self.scheduler is True:
                 if self.step_scheduler_after == 'epoch':
                     self.scheduler.step()
         tracker.close()
         return losses.avg, monitor
     
     def valid_one_epoch(self, dataloader):
+        """
+        Perform one epoch of validation.
+
+        Args:
+            dataloader (torch.nn.Module): batches of data.
+
+        Returns:
+            loss: Loss Average.
+            monitor: Dictionary containing additional metrics with averages.
+        """
         self.eval()
         losses = AverageMeter()
         tracker = tqdm(dataloader, total = len(dataloader))
@@ -218,14 +248,41 @@ class Model(nn.Module):
             return losses.avg, monitor
         
     def predict_one_step(self, data):
+        """
+        Predict one step of test.
+
+        Args:
+            data (dict): Dictionary containing input data tensors.
+
+        Returns:
+            output: output tensor
+        """
         output, _, _ = self.model_fn(data)
         return output
         
     def process_output(self, output):
+        """
+        Move output to cpu and convert into numpy 
+
+        Args:
+            output (Torch.Tensor): A tensor containing output of the model
+        Returns:
+            output: output tensor
+        """
         output = output.cpu().detach().numpy()
         return output
         
     def predict(self, dataset, batch_size = 16, collate_fn = None):
+        """
+        Move output to cpu and convert into numpy 
+
+        Args:
+            data (Torch Dataset): Torch Dataset
+            batch_size (int) : 16
+            collate function 
+        Returns:
+            output: output tensor
+        """
         if next(self.parameters()).device != self.device:
             self.to(self.device)
 
@@ -250,6 +307,15 @@ class Model(nn.Module):
         tracker.close()
         
     def save(self, model_path, weights_only = False):
+        """
+        Move output to cpu and convert into numpy 
+
+        Args:
+            model_path (str): model filepath
+            weights_only (bool) : to save only weights
+        Returns:
+            output: output tensor
+        """
         model_state_dict = self.state_dict()
         if weights_only:
             torch.save(model_state_dict, model_path)
@@ -318,7 +384,7 @@ class Model(nn.Module):
         if next(self.parameters()).device != self.device:
             self.to(self.device)
         
-        if self.fp16:
+        if self.fp16 is True:
             self.scaler = torch.cuda.amp.GradScaler()
 
         self.optimizer, self.scheduler = self.fetch_optimizer()
