@@ -367,15 +367,16 @@ class Model(nn.Module):
             train_bs = 64,
             valid_bs = 64,
     ):
+        self.device = device
 
-        if self.trainloader is None:
+        if self.trainloader is not None:
             self.trainloader = torch.utils.data.DataLoader(
                 train_dataset,
                 train_bs,
                 shuffle = True
             )
         
-        if self.validloader is None:
+        if self.validloader is not None:
             self.validloader = torch.utils.data.DataLoader(
                 valid_dataset,
                 valid_bs,
@@ -407,7 +408,7 @@ class Model(nn.Module):
                         print(f'Model was saved based {self.save_best_model} with {self.valid_loss} loss')
                         self.best_loss = self.valid_loss
                 elif self.save_best_model == 'on_eval_metric':
-                    if self.save_on_metric in self.train_metrics:
+                    if self.save_on_metric in self.valid_metrics:
                         if self.valid_metrics[self.save_on_metric] > self.best_score:
                             self.save(f'{self.model_path}', self.weights_only)
                             print(f'Model was saved based {self.save_best_model} with {self.valid_metrics[self.save_on_metric]} {self.save_on_metric}')
