@@ -369,19 +369,21 @@ class Model(nn.Module):
     ):
         self.device = device
 
-        if self.trainloader is not None:
+        if self.trainloader is None:
             self.trainloader = torch.utils.data.DataLoader(
                 train_dataset,
                 train_bs,
                 shuffle = True
             )
-        
-        if self.validloader is not None:
+        if valid_dataset is not None: 
             self.validloader = torch.utils.data.DataLoader(
                 valid_dataset,
                 valid_bs,
                 shuffle = True
             )
+        else:
+            self.validloader = None
+            
         if next(self.parameters()).device != self.device:
             self.to(self.device)
         
