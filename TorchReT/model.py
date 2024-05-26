@@ -8,44 +8,13 @@ import random
 
 class Model(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
-        """
-        Constructor for the Model class.
-
-        Initializes various attributes used during training and evaluation.
-
-        Attributes:
-            optimizer (Optimizer or None): Holds the optimizer instance.
-            scheduler (LRScheduler or None): Holds the scheduler instance.
-            trainloader (DataLoader or None): DataLoader for training dataset.
-            validloader (DataLoader or None): DataLoader for validation dataset.
-            num_workers (int or None): Number of workers for data loading.
-            pin_memory (bool or None): Whether to pin memory for DataLoader.
-            collate_fn (function or None): Collate function for DataLoader.
-            step_scheduler_after (str): Step scheduler after each batch or epoch.
-            current_epoch (int): Current epoch during training.
-            current_train_step (int): Current training step.
-            current_valid_step (int): Current validation step.
-            device (str or None): Device for model and data.
-            fp16 (bool or None): Whether to use mixed precision training.
-            scaler (torch.cuda.amp.GradScaler or None): Gradient scaler for mixed precision training.
-            mixup (float): Mixup augmentation probability.
-            cutmix (float): Cutmix augmentation probability.
-            sam_training (bool or None): Whether to use Sharpness-Aware Minimization.
-            swa_training (bool or None): Whether to use Stochastic Weight Averaging.
-            monitor_metric_at_end (str or None): Metric to monitor at the end of each epoch.
-            save_model_at_every_epoch (bool or None): Whether to save model at every epoch.
-            model_path (str or None): Path to save the model.
-            weights_only (bool or None): Whether to save only the model weights.
-            save_best_model (str or None) : Whether to save model based on (on_eval_loss or on_eval_metric)
-            save_on_metric (str or None) : Model saving on which metric
-        """
         super().__init__(*args, **kwargs)
 
         self.optimizer = None
         self.scheduler = None 
         self.trainloader = None
         self.validloader = None
-        self.num_workers = None
+        self.num_workers = 1
         self.pin_memory = None 
         self.collate_fn = None 
         self.step_scheduler_after = 'batch'
@@ -65,69 +34,53 @@ class Model(nn.Module):
         self.save_on_metric = None
         self.model_path = None
         self.weights_only = None
+        self.ignore_for_device = None
+        self.logger = None
 
     def forward(self, *args, **kwargs):
-        """
-        Forward pass of the model.
-        """
         super().forward(*args, **kwargs) 
 
     def monitor_metrics(self, *args, **kwargs):
-        """
-        Method to monitor additional metrics during training or evaluation.
-        """
         return 
     
     def fetch_optimizer(self, *args, **kwargs):
-        """
-        Method to fetch the optimizer for training.
-        """
         return 
     
     def get_mixup(self, *args, **kwargs):
-        """
-        Method to apply mixup augmentation to the data.
-        """
         return 
     
     def get_cutmix(self, *args, **kwargs):
-        """
-        Method to apply cutmix augmentation to the data.
-        """
         return 
     
     def model_fn(self, data):
-        """
-        Forward pass of the model with data processing.
-
-        Args:
-            data (dict): Dictionary containing input data tensors.
-
-        Returns:
-            output: Model output tensor.
-            loss: Loss tensor.
-            metrics: Dictionary containing additional metrics.
-        """
         for k, v in data.items():
-            data[k] = v.to(self.device)
+            if k == self.ignore_for_device:
+                pass
+            else:
+                data[k] = v.to(self.device)
         if self.fp16 is not None:
             with torch.cuda.amp.autocast():
                 output, loss, metrics = self(**data)
         else:
             output, loss, metrics = self(**data)
         return output, loss, metrics
+    
+    def setup_logger(self):
+        return 
+    
+    def train_one_step_logs(self, batch_id, data, logits, loss, metrics):
+        return 
+    
+    def valid_one_step_logs(self, batch_id, data, logits, loss, metrics):
+        return
+    
+    def train_one_epoch_logs(self, loss, monitor):
+        return
+    
+    def valid_one_epoch_logs(self, loss, monitor):
+        return 
 
-    def train_one_step(self, data):
-        """
-        Perform one step of training.
-
-        Args:
-            data (dict): Dictionary containing input data tensors.
-
-        Returns:
-            loss: Loss tensor.
-            metrics: Dictionary containing additional metrics.
-        """
+    def train_one_step(self, batch_id, data):
         # Apply mixup or cutmix augmentation
         if random.uniform(0, 1) > self.mixup:
             data = self.get_mixup(data)
@@ -161,39 +114,23 @@ class Model(nn.Module):
         if self.scheduler is True:
             if self.step_scheduler_after == 'batch':
                 self.scheduler.step()
-                
+    
+        if self.logger is True:
+            self.train_one_step_logs(batch_id, data, _, loss, metrics)
         return loss, metrics
     
-    def valid_one_step(self, data):
-        """
-        Perform one step of validation.
-
-        Args:
-            data (dict): Dictionary containing input data tensors.
-
-        Returns:
-            loss: Loss tensor.
-            metrics: Dictionary containing additional metrics.
-        """
+    def valid_one_step(self, batch_id, data):
         _, loss, metrics = self.model_fn(data)
+        if self.logger is True:
+            self.valid_one_step_logs(batch_id, data, _, loss, metrics)
         return loss, metrics
 
     def train_one_epoch(self, dataloader):
-        """
-        Perform one epoch of training.
-
-        Args:
-            dataloader (torch.nn.Module): batches of data.
-
-        Returns:
-            loss: Loss Average.
-            monitor: Dictionary containing additional metrics with averages.
-        """
         self.train()
         losses = AverageMeter()
         tracker = tqdm(dataloader, total = len(dataloader))
         for batch_id, data in enumerate(tracker):
-            loss, metrics = self.train_one_step(data)
+            loss, metrics = self.train_one_step(batch_id, data)
             losses.update(loss.item(), dataloader.batch_size)
             if batch_id == 0:
                 metrics_meter = {k : AverageMeter() for k in metrics}
@@ -216,25 +153,17 @@ class Model(nn.Module):
                 if self.step_scheduler_after == 'epoch':
                     self.scheduler.step()
         tracker.close()
+        if self.logger is True:
+            self.train_one_epoch_logs(losses.avg, monitor)
         return losses.avg, monitor
     
     def valid_one_epoch(self, dataloader):
-        """
-        Perform one epoch of validation.
-
-        Args:
-            dataloader (torch.nn.Module): batches of data.
-
-        Returns:
-            loss: Loss Average.
-            monitor: Dictionary containing additional metrics with averages.
-        """
         self.eval()
         losses = AverageMeter()
         tracker = tqdm(dataloader, total = len(dataloader))
         with torch.no_grad():
             for batch_id, data in enumerate(tracker):
-                loss, metrics = self.valid_one_step(data)
+                loss, metrics = self.valid_one_step(batch_id, data)
                 losses.update(loss.item(), dataloader.batch_size)
                 if batch_id == 0:
                     metrics_meter = {k : AverageMeter() for k in metrics}
@@ -245,44 +174,19 @@ class Model(nn.Module):
                 tracker.set_postfix(epoch = self.current_epoch, loss='%.6f' %float(losses.avg), stage="eval", **monitor)
                 self.current_valid_step += 1
             tracker.close()
+            if self.logger is True:
+                self.valid_one_epoch_logs(losses.avg, monitor)
             return losses.avg, monitor
         
     def predict_one_step(self, data):
-        """
-        Predict one step of test.
-
-        Args:
-            data (dict): Dictionary containing input data tensors.
-
-        Returns:
-            output: output tensor
-        """
         output, _, _ = self.model_fn(data)
         return output
         
     def process_output(self, output):
-        """
-        Move output to cpu and convert into numpy 
-
-        Args:
-            output (Torch.Tensor): A tensor containing output of the model
-        Returns:
-            output: output tensor
-        """
         output = output.cpu().detach().numpy()
         return output
         
     def predict(self, dataset, batch_size = 16, collate_fn = None):
-        """
-        Move output to cpu and convert into numpy 
-
-        Args:
-            data (Torch Dataset): Torch Dataset
-            batch_size (int) : 16
-            collate function 
-        Returns:
-            output: output tensor
-        """
         if next(self.parameters()).device != self.device:
             self.to(self.device)
 
@@ -307,15 +211,6 @@ class Model(nn.Module):
         tracker.close()
         
     def save(self, model_path, weights_only = False):
-        """
-        Move output to cpu and convert into numpy 
-
-        Args:
-            model_path (str): model filepath
-            weights_only (bool) : to save only weights
-        Returns:
-            output: output tensor
-        """
         model_state_dict = self.state_dict()
         if weights_only:
             torch.save(model_state_dict, model_path)
@@ -366,20 +261,30 @@ class Model(nn.Module):
             epochs = 10,
             train_bs = 64,
             valid_bs = 64,
+            logger = True
     ):
         self.device = device
+        self.logger = logger
+
+        if self.logger is True:
+            self.setup_logger()
 
         if self.trainloader is None:
             self.trainloader = torch.utils.data.DataLoader(
                 train_dataset,
                 train_bs,
-                shuffle = True
+                shuffle = True,
+                num_workers = self.num_workers,
+                pin_memory = self.pin_memory
             )
+
         if valid_dataset is not None: 
             self.validloader = torch.utils.data.DataLoader(
                 valid_dataset,
                 valid_bs,
-                shuffle = True
+                shuffle = True,
+                num_workers = self.num_workers,
+                pin_memory = self.pin_memory
             )
         else:
             self.validloader = None
@@ -418,6 +323,8 @@ class Model(nn.Module):
             if self.save_model_at_every_epoch is True:
                 self.save(self.model_path, self.weights_only)
 
+        if self.logger is True:
+            self.run.stop()
 
 
 
