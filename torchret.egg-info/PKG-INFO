@@ -1,0 +1,10 @@
+Metadata-Version: 2.1
+Name: torchret
+Version: 0.1.2
+Home-page: https://github.com/parthdhameliya7
+Author: Parth Dhameliya
+License: Apache License 2.0
+Platform: linux
+Platform: unix
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown

@@ -145,11 +145,11 @@ class Model(nn.Module):
             if self.current_epoch + 1 >= self.swa_start:
                 self.swa_model.update_parameters(self)
             else:
-                if self.scheduler is True:
+                if self.scheduler is not None:
                     if self.step_scheduler_after == 'epoch':
                         self.scheduler.step()
         else:
-            if self.scheduler is True:
+            if self.scheduler is not None:
                 if self.step_scheduler_after == 'epoch':
                     self.scheduler.step()
         tracker.close()
