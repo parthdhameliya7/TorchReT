@@ -1,4 +1,0 @@
-dist/*
-example/digit-recognizer.pt 
-build/*
-torchret.egg-info/*
