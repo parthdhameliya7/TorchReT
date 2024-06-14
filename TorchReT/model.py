@@ -54,7 +54,7 @@ class Model(nn.Module):
     
     def model_fn(self, data):
         for k, v in data.items():
-            if k == self.ignore_for_device:
+            if k in list(self.ignore_for_device):
                 pass
             else:
                 data[k] = v.to(self.device)
@@ -66,6 +66,9 @@ class Model(nn.Module):
         return output, loss, metrics
     
     def setup_logger(self):
+        return 
+    
+    def stop_logger(self):
         return 
     
     def train_one_step_logs(self, batch_id, data, logits, loss, metrics):
@@ -223,6 +226,7 @@ class Model(nn.Module):
             sch_state_dict = self.scheduler.state_dict() 
         else:
             sch_state_dict = None 
+            
         model_dict = {}
         model_dict['state_dict'] = model_state_dict 
         model_dict['optimizer'] = opt_state_dict
@@ -233,6 +237,7 @@ class Model(nn.Module):
         model_dict['swa_training'] = self.swa_training
         model_dict['train_metrics'] = self.train_metrics
         model_dict['train_loss'] = self.train_loss
+
         if self.validloader is not None:
             model_dict['valid_loss'] = self.valid_loss
         elif self.valid_metrics is not None:
@@ -324,7 +329,7 @@ class Model(nn.Module):
                 self.save(self.model_path, self.weights_only)
 
         if self.logger is True:
-            self.run.stop()
+            self.stop_logger()
 
 
 
